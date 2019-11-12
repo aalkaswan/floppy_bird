@@ -1,12 +1,12 @@
 import pygame
 import neat
-import time
 import os
 import random
 pygame.font.init()
 
 WIN_WIDTH = 500
 WIN_HEIGHT = 800
+gen_count = 0
 
 BIRDS = [pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird1.png"))),
              pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird2.png"))),
@@ -156,7 +156,7 @@ class Base:
         win.blit(self.IMG, (self.x2, self.y))
 
 
-def draw_window(win, birds, pipes, base, score):
+def draw_window(win, birds, pipes, base, score, alive):
     win.blit(BG, (0, 0))
 
     for pipe in pipes:
@@ -164,6 +164,10 @@ def draw_window(win, birds, pipes, base, score):
 
     text = STAT_FONT.render("Score: " + str(score), 1, (255, 255, 255))
     win.blit(text, (WIN_WIDTH - 10 - text.get_width(), 10))
+    text = STAT_FONT.render("Generation: " + str(gen_count), 1, (255, 255, 255))
+    win.blit(text, (10, 10))
+    text = STAT_FONT.render("Alive: " + str(alive), 1, (255, 255, 255))
+    win.blit(text, (10, 50))
 
     base.draw(win)
     for bird in birds:
@@ -173,6 +177,8 @@ def draw_window(win, birds, pipes, base, score):
 
 
 def main(genomes, config):
+    global gen_count
+    gen_count += 1
     nets = []
     ge = []
     birds = []
@@ -183,7 +189,6 @@ def main(genomes, config):
         birds.append(Bird(230, 350))
         g.fitness = 0
         ge.append(g)
-
 
     base = Base(730)
     pipes = [Pipe(600)]
@@ -254,10 +259,7 @@ def main(genomes, config):
                 nets.pop(x)
                 ge.pop(x)
 
-        draw_window(win, birds, pipes, base, score)
-
-
-
+        draw_window(win, birds, pipes, base, score, len(birds))
 
 
 def run(config_path):
@@ -271,7 +273,7 @@ def run(config_path):
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
 
-    winner = p.run(main, 50)
+    p.run(main, 50)
 
 
 if __name__ == "__main__":
