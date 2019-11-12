@@ -156,7 +156,7 @@ class Base:
         win.blit(self.IMG, (self.x2, self.y))
 
 
-def draw_window(win, birds, pipes, base, score, alive):
+def draw_window(win, birds, pipes, base, score, alive, speed):
     win.blit(BG, (0, 0))
 
     for pipe in pipes:
@@ -168,6 +168,8 @@ def draw_window(win, birds, pipes, base, score, alive):
     win.blit(text, (10, 10))
     text = STAT_FONT.render("Alive: " + str(alive), 1, (255, 255, 255))
     win.blit(text, (10, 50))
+    text = STAT_FONT.render("FPS: " + str(speed), 1, (255, 0, 0))
+    win.blit(text, (WIN_WIDTH - 10 - text.get_width(), WIN_HEIGHT - 100))
 
     base.draw(win)
     for bird in birds:
@@ -179,6 +181,8 @@ def draw_window(win, birds, pipes, base, score, alive):
 def main(genomes, config):
     global gen_count
     gen_count += 1
+    speed = 30
+
     nets = []
     ge = []
     birds = []
@@ -200,19 +204,22 @@ def main(genomes, config):
 
     run = True
     while run:
-        clock.tick(30)
+        clock.tick(speed)
+
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 run = False
                 pygame.quit()
                 quit()
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_m and speed < 240:
+                    speed = speed*2
 
         pipe_index = 0
         if len(birds) > 0:
             if len(pipes) > 1 and birds[0].x > pipes[0].x + pipes[0].PIPE_TOP.get_width():
-               pipe_index = 1
+                pipe_index = 1
         else:
-            run = False
             break
         for x, bird in enumerate(birds):
             bird.move()
@@ -259,7 +266,7 @@ def main(genomes, config):
                 nets.pop(x)
                 ge.pop(x)
 
-        draw_window(win, birds, pipes, base, score, len(birds))
+        draw_window(win, birds, pipes, base, score, len(birds), speed)
 
 
 def run(config_path):
