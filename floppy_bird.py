@@ -9,12 +9,14 @@ WIN_HEIGHT = 800
 gen_count = 0
 
 BIRDS = [pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird1.png"))),
-             pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird2.png"))),
-             pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird3.png")))]
+         pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird2.png"))),
+         pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird3.png"))),
+         pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird2.png")))]
 
 PIPE = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "pipe.png")))
 BASE = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "base.png")))
 BG = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bg.png")))
+VEL = 5
 
 STAT_FONT = pygame.font.SysFont("comicsans", 50)
 
@@ -44,15 +46,17 @@ class Bird:
 
         displacement = self.vel*self.tick_count + 1.5*self.tick_count**2
 
+        # limit up speed to 16
         if displacement >= 16:
             displacement = 16
 
+        # free fall acceleration
         if displacement < 0:
             displacement -= 2
 
         self.y = self.y + displacement
 
-        if displacement<0:
+        if displacement < 0:
             if self.tilt < self.MAX_ROT:
                 self.tilt = self.MAX_ROT
             else:
@@ -62,21 +66,8 @@ class Bird:
     def draw(self, win):
         self.img_count += 1
 
-        if self.img_count < self.ANIMATION_TIME:
-            self.img = self.IMGS[0]
-        elif self.img_count < self.ANIMATION_TIME*2:
-            self.img = self.IMGS[1]
-        elif self.img_count < self.ANIMATION_TIME*3:
-            self.img = self.IMGS[2]
-        elif self.img_count < self.ANIMATION_TIME*4:
-            self.img = self.IMGS[1]
-        elif self.img_count == self.ANIMATION_TIME*4 + 1:
-            self.img = self.IMGS[0]
-            self.img_count = 0
-
-        if self.tilt <= -80:
-            self.img = self.IMGS[1]
-            self.img_count = self.ANIMATION_TIME*2
+        # animation cycle
+        self.img = self.IMGS[self.img_count % 4]
 
         rotated_image = pygame.transform.rotate(self.img, self.tilt)
         new_rect = rotated_image.get_rect(center=self.img.get_rect(topleft=(self.x, self.y)).center)
@@ -87,8 +78,7 @@ class Bird:
 
 
 class Pipe:
-    GAP = 200
-    VEL = 5
+    GAP = 180
 
     def __init__(self, x):
         self.x = x
@@ -108,7 +98,7 @@ class Pipe:
         self.bottom = self.height + self.GAP
 
     def move(self):
-        self.x -= self.VEL
+        self.x -= VEL
 
     def draw(self, win):
         win.blit(self.PIPE_TOP, (self.x, self.top))
@@ -132,28 +122,27 @@ class Pipe:
 
 
 class Base:
-    VEL = 5
     WIDTH = BASE.get_width()
     IMG = BASE
 
     def __init__(self, y):
         self.y = y
-        self.x1 = 0
-        self.x2 = self.WIDTH
+        self.first = 0
+        self.second = self.WIDTH
 
     def move(self):
-        self.x1 -= self.VEL
-        self.x2 -= self.VEL
+        self.first -= VEL
+        self.second -= VEL
 
-        if self.x1 + self.WIDTH < 0:
-            self.x1 = self.x2 + self.WIDTH
+        if self.first + self.WIDTH < 0:
+            self.first = self.second + self.WIDTH
 
-        if self.x2 + self.WIDTH < 0:
-            self.x2 = self.x1 + self.WIDTH
+        if self.second + self.WIDTH < 0:
+            self.second = self.first + self.WIDTH
 
     def draw(self, win):
-        win.blit(self.IMG, (self.x1, self.y))
-        win.blit(self.IMG, (self.x2, self.y))
+        win.blit(self.IMG, (self.first, self.y))
+        win.blit(self.IMG, (self.second, self.y))
 
 
 def draw_window(win, birds, pipes, base, score, alive, speed):
@@ -202,18 +191,18 @@ def main(genomes, config):
 
     clock = pygame.time.Clock()
 
-    run = True
-    while run:
+    while True:
         clock.tick(speed)
 
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
-                run = False
                 pygame.quit()
                 quit()
             if e.type == pygame.KEYDOWN:
                 if e.key == pygame.K_m and speed < 240:
                     speed = speed*2
+                if e.key == pygame.K_k:
+                    birds = []
 
         pipe_index = 0
         if len(birds) > 0:
@@ -229,7 +218,7 @@ def main(genomes, config):
                                        abs(bird.y - pipes[pipe_index].height),
                                        abs(bird.y - pipes[pipe_index].bottom)))
 
-            if output[0] > 0.5:
+            if output[0] > 0.7:
                 bird.jump()
 
         add_pipe = False
