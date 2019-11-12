@@ -13,6 +13,8 @@ BIRDS = [pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird1.
          pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird3.png"))),
          pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird2.png")))]
 
+ICON = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird1.png")))
+
 PIPE = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "pipe.png")))
 BASE = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "base.png")))
 BG = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bg.png")))
@@ -186,6 +188,13 @@ def main(genomes, config):
     base = Base(730)
     pipes = [Pipe(600)]
     score = 0
+
+    # set position of window
+    position = 500, 30
+    os.environ['SDL_VIDEO_WINDOW_POS'] = str(position[0]) + "," + str(position[1])
+    pygame.init()
+    pygame.display.set_caption('Floppy Bird')
+    pygame.display.set_icon(ICON)
 
     win = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 
