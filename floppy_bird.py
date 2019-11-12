@@ -108,15 +108,15 @@ class Pipe:
 
     def draw(self, win):
         win.blit(self.PIPE_TOP, (self.x, self.top))
-        win.blit(self.PIPE_BOTTOM (self.x, self.bottom))
+        win.blit(self.PIPE_BOTTOM, (self.x, self.bottom))
 
     def collide(self, bird):
         bird_mask = bird.get_mask()
         top_mask = pygame.mask.from_surface(self.PIPE_TOP)
         bottom_mask = pygame.mask.from_surface(self.PIPE_BOTTOM)
 
-        top_offset = (self.x - bird.x, self.top - round(bird.y))
-        bottom_offset = (self.x - bird.x, self.bottom - round(bird.y))
+        top_offset = (self.x - bird.x, int(self.top - round(bird.y)))
+        bottom_offset = (self.x - bird.x, int(self.bottom - round(bird.y)))
 
         b_point = bird_mask.overlap(bottom_mask, bottom_offset)
         t_point = bird_mask.overlap(top_mask, top_offset)
@@ -152,14 +152,24 @@ class Base:
         win.blit(self.IMG, (self.x2, self.y))
 
 
-def draw_window(win, bird):
-    win.blit(BG, (0,0))
+def draw_window(win, bird, pipes, base):
+    win.blit(BG, (0, 0))
+
+    for pipe in pipes:
+        pipe.draw(win)
+
+    base.draw(win)
+
     bird.draw(win)
     pygame.display.update()
 
 
 def main():
-    bird = Bird(200, 200)
+    bird = Bird(230, 350)
+    base = Base(730)
+    pipes = [Pipe(600)]
+    score = 0
+
     win = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 
     clock = pygame.time.Clock()
@@ -171,7 +181,28 @@ def main():
             if e.type == pygame.QUIT:
                 run = False
         # bird.move()
-        draw_window(win, bird)
+        add_pipe = False
+        removed = []
+        base.move()
+        for pipe in pipes:
+            if pipe.collide(bird):
+                pass
+
+            if pipe.x + pipe.PIPE_BOTTOM.get_width() < 0:
+                removed.append(pipe)
+            if not pipe.passed and pipe.x < bird.x:
+                pipe.passed = True
+                add_pipe = True
+            pipe.move()
+
+        if add_pipe:
+            score += 1
+            pipes.append(Pipe(600))
+
+        for p in removed:
+            pipes.remove(p)
+
+        draw_window(win, bird, pipes, base)
     pygame.quit()
     quit()
 
